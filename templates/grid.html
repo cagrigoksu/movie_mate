@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ "Zoomed Grid" if zoom else "Movie Grid" }}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 30px;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      font-size: 28px;
+      color: #222;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 80px repeat(10, 1fr);
+      grid-template-rows: 50px repeat(10, 1fr);
+      width: min(95vmin, 900px);
+      aspect-ratio: 1;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+      background-color: #fff;
+    }
+
+    .label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fafafa;
+      border: 1px solid #e0e0e0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-weight: bold;
+      border-radius: 0;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .tile:hover {
+      transform: scale(1.05);
+      z-index: 5;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    .tile a {
+      text-decoration: none;
+      color: inherit;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .tile a:hover {
+      text-decoration: none;
+    }
+
+    .back-button {
+      margin-top: 20px;
+      padding: 8px 16px;
+      background-color: #333;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    .back-button:hover {
+      background-color: #000;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>{{ "Zoomed Grid" if zoom else "Movie Grid" }}</h1>
+
+  <div class="grid-container">
+    <!-- Top-left empty -->
+    <div class="label"></div>
+
+    <!-- Year labels -->
+    {% for year in year_labels %}
+      <div class="label">{{ year }}</div>
+    {% endfor %}
+
+    <!-- Vote labels and tiles -->
+    {% for pair in grid_with_votes %}
+      {% set row = pair[0] %}
+      {% set vote_label = pair[1] %}
+      <div class="label">{{ vote_label }}</div>
+      {% for cell in row %}
+        <div class="tile" style="background-color: {{ cell.color }}; color: {{ cell.text_color }};">
+          <a href="/zoom?vmin={{ vote_edges[grid_size - cell.y - 1] }}&vmax={{ vote_edges[grid_size - cell.y] }}&ymin={{ year_edges[cell.x]|int }}&ymax={{ year_edges[cell.x + 1]|int }}">
+            {{ cell.count }}
+          </a>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  {% if zoom %}
+    <a href="/" class="back-button">← Back to Full Grid</a>
+  {% endif %}
+</body>
+</html>
