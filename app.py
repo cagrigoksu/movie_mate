@@ -7,113 +7,58 @@ import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
-# Load the dataset
-df = pd.read_csv("mov.csv")
-df['release_date'] = pd.to_datetime(df['release_date'])
-df['year'] = df['release_date'].dt.year
+df = pd.read_csv('mov.csv')  
+df['release_year'] = pd.to_datetime(df['release_date']).dt.year
 
-# Bin settings
-grid_size = 10
-vote_edges = np.linspace(0, 10, grid_size + 1)
-year_edges = np.linspace(df['year'].min(), df['year'].max() + 1, grid_size + 1, dtype=int)
+def create_bins(sub_df):
+    # vote bins (0-1, 1-2, ... , 9-10 )
+    vote_bins = np.arange(0, 11, 1)
+    vote_labels = [f'{i}-{i+1}' for i in range(0, 10)]
+    sub_df['vote_bin'] = pd.cut(sub_df['vote_average'], bins=vote_bins, labels=vote_labels, include_lowest=True, right=False)
 
-# Bin assignments
-df['x_bin'] = pd.cut(df['year'], bins=year_edges, labels=False, include_lowest=True)
-df['y_bin'] = pd.cut(df['vote_average'], bins=vote_edges, labels=False, include_lowest=True)
+    # year bins
+    min_year = sub_df['release_year'].min()
+    max_year = sub_df['release_year'].max()
 
-# Color setup
-from matplotlib import cm
-from matplotlib.colors import to_hex
+    if min_year == max_year:
+        year_bins = [min_year, min_year + 1]
+    else:
+        raw_bins = np.linspace(min_year, max_year + 1, num=11, dtype=int)
+        year_bins = np.unique(raw_bins)  # no duplicates
+        if len(year_bins) < 2:
+            year_bins = [min_year, max_year + 1]
 
-cmap_x = cm.Blues
-cmap_y = cm.Reds
+    # generate labels
+    year_labels = [f'{year_bins[i]}-{year_bins[i+1]-1}' for i in range(len(year_bins) - 1)]
 
-def get_tile_color(x, y):
-    cx = cmap_x(x / (grid_size - 1))  # year bin
-    cy = cmap_y(1 - (y / (grid_size - 1)))  # vote bin reversed
-    blended = [(cx[i] + cy[i]) / 2 for i in range(3)]
-    return to_hex(blended)
+    sub_df['year_bin'] = pd.cut(sub_df['release_year'], bins=year_bins, labels=year_labels, include_lowest=True, right=False)
 
-@app.route("/")
-def index():
-    grid = [[{"count": 0, "color": "#ffffff", "x": x, "y": y, "text_color": "#000"} for x in range(grid_size)] for y in range(grid_size)]
+    return sub_df, vote_labels[::-1], year_labels
 
-    for _, row in df.iterrows():
-        x, y = row['x_bin'], row['y_bin']
-        if pd.notna(x) and pd.notna(y):
-            x, y = int(x), int(y)
-            y = grid_size - 1 - y
-            grid[y][x]["count"] += 1
+@app.route('/')
+@app.route('/grid')
+def grid():
+    v_filter = request.args.get('v')  # vote_bin
+    y_filter = request.args.get('y')  # year_bin
 
-    for y in range(grid_size):
-        for x in range(grid_size):
-            count = grid[y][x]["count"]
-            grid[y][x]["color"] = get_tile_color(x, y)
-            grid[y][x]["text_color"] = "#000" if count < 300 else "#fff"
-
-    year_labels = [f"{year_edges[i]}–{year_edges[i+1]-1}" for i in range(grid_size)]
-    vote_labels = [f"{vote_edges[grid_size - i -1]:.1f}–{vote_edges[grid_size - i]:.1f}" for i in range(grid_size)]
-    grid_with_votes = list(zip(grid, vote_labels))
-
-    return render_template("grid.html",
-                           grid=grid,
-                           grid_with_votes=grid_with_votes,
-                           year_labels=year_labels,
-                           vote_labels=vote_labels,
-                           vote_edges=vote_edges,
-                           year_edges=year_edges,
-                           grid_size=grid_size,
-                           zoom=False)
-
-@app.route("/zoom")
-def zoom():
-    vmin = float(request.args.get("vmin"))
-    vmax = float(request.args.get("vmax"))
-    ymin = int(request.args.get("ymin"))
-    ymax = int(request.args.get("ymax"))
-
-    filtered_df = df[(df["vote_average"] >= vmin) & (df["vote_average"] <= vmax) &
-                     (df["year"] >= ymin) & (df["year"] < ymax)]
+    filtered_df = df.copy()
+    
+    if v_filter and y_filter:
+        v_low, v_high = map(float, v_filter.split('-'))
+        y_low, y_high = map(int, y_filter.split('-'))
+        filtered_df = filtered_df[
+            (filtered_df['vote_average'] >= v_low) & (filtered_df['vote_average'] < v_high) &
+            (filtered_df['release_year'] >= y_low) & (filtered_df['release_year'] <= y_high)
+        ]
 
     if len(filtered_df) <= 100:
-        movies = filtered_df.sort_values(by="vote_average", ascending=False)[["title", "vote_average", "year"]]
-        return render_template("grid_detail.html", movies=movies, vmin=vmin, vmax=vmax, ymin=ymin, ymax=ymax)
+        movies = filtered_df[['title', 'vote_average', 'release_year']].sort_values(by='vote_average', ascending=False)
+        return render_template('grid_detail.html', movies=movies, vote_bin=v_filter, year_bin=y_filter)
 
-    # Recalculate bins for zoomed view
-    vote_edges_zoom = np.linspace(vmin, vmax, grid_size + 1)
-    year_edges_zoom = np.linspace(ymin, ymax, grid_size + 1, dtype=int)
-
-    filtered_df['x_bin'] = pd.cut(filtered_df['year'], bins=year_edges_zoom, labels=False, include_lowest=True)
-    filtered_df['y_bin'] = pd.cut(filtered_df['vote_average'], bins=vote_edges_zoom, labels=False, include_lowest=True)
-
-    grid = [[{"count": 0, "color": "#ffffff", "x": x, "y": y, "text_color": "#000"} for x in range(grid_size)] for y in range(grid_size)]
-
-    for _, row in filtered_df.iterrows():
-        x, y = row['x_bin'], row['y_bin']
-        if pd.notna(x) and pd.notna(y):
-            x, y = int(x), int(y)
-            y = grid_size - 1 - y
-            grid[y][x]["count"] += 1
-
-    for y in range(grid_size):
-        for x in range(grid_size):
-            count = grid[y][x]["count"]
-            grid[y][x]["color"] = get_tile_color(x, y)
-            grid[y][x]["text_color"] = "#000" if count < 300 else "#fff"
-
-    year_labels = [f"{year_edges_zoom[i]}–{year_edges_zoom[i+1]-1}" for i in range(grid_size)]
-    vote_labels = [f"{vote_edges_zoom[grid_size - i -1]:.1f}–{vote_edges_zoom[grid_size - i]:.1f}" for i in range(grid_size)]
-    grid_with_votes = list(zip(grid, vote_labels))
-
-    return render_template("grid.html",
-                           grid=grid,
-                           grid_with_votes=grid_with_votes,
-                           year_labels=year_labels,
-                           vote_labels=vote_labels,
-                           vote_edges=vote_edges_zoom,
-                           year_edges=year_edges_zoom,
-                           grid_size=grid_size,
-                           zoom=True)
+    binned_df, vote_bins, year_bins = create_bins(filtered_df)
+    pivot = binned_df.pivot_table(index='vote_bin', columns='year_bin', aggfunc='size', fill_value=0)
+    pivot = pivot.reindex(index=vote_bins, columns=year_bins, fill_value=0)
+    return render_template('grid.html', vote_bins=vote_bins, year_bins=year_bins, grid=pivot.values.tolist(), vote_filter=v_filter, year_filter=y_filter)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)

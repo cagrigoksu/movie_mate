@@ -2,124 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{{ "Zoomed Grid" if zoom else "Movie Grid" }}</title>
+  <title>Movie Grid</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 30px;
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background-color: #f5f7fa;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    h1 {
-      margin-bottom: 24px;
-      font-size: 28px;
+      padding: 2rem;
+      background: #fdfdfd;
       color: #222;
     }
 
-    .grid-container {
-      display: grid;
-      grid-template-columns: 80px repeat(10, 1fr);
-      grid-template-rows: 50px repeat(10, 1fr);
-      width: min(95vmin, 900px);
-      aspect-ratio: 1;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
-      background-color: #fff;
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
     }
 
-    .label {
+    .grid-wrapper {
+      display: grid;
+      grid-template-columns: auto repeat({{ year_bins|length }}, 1fr);
+      grid-template-rows: auto repeat({{ vote_bins|length }}, 1fr);
+      gap: 6px;
+      width: min(95vmin, 95vw);
+      height: min(95vmin, 95vw);
+      margin: auto;
+      background-color: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .grid-label {
+      background: #fff;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #fafafa;
-      border: 1px solid #e0e0e0;
-      font-size: 12px;
-      font-weight: 600;
-      color: #666;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      text-align: center;
     }
 
     .tile {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
       font-weight: bold;
-      border-radius: 0;
-      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      color: #222;
+      font-size: 0.9rem;
     }
 
     .tile:hover {
-      transform: scale(1.05);
-      z-index: 5;
-      box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+      transform: scale(1.03);
+      box-shadow: 0 0 5px rgba(0,0,0,0.15);
     }
-
-    .tile a {
-      text-decoration: none;
-      color: inherit;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .tile a:hover {
-      text-decoration: none;
-    }
-
-    .back-button {
-      margin-top: 20px;
-      padding: 8px 16px;
-      background-color: #333;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: background-color 0.2s ease;
-    }
-
-    .back-button:hover {
-      background-color: #000;
-    }
-
   </style>
 </head>
 <body>
-  <h1>{{ "Zoomed Grid" if zoom else "Movie Grid" }}</h1>
+  <h2>Movie Grid{% if vote_filter and year_filter %} (Zoom: {{ vote_filter }}, {{ year_filter }}){% endif %}</h2>
 
-  <div class="grid-container">
-    <!-- Top-left empty -->
-    <div class="label"></div>
+  <div class="grid-wrapper">
 
-    <!-- Year labels -->
-    {% for year in year_labels %}
-      <div class="label">{{ year }}</div>
+    <div></div>
+
+    {% for y in year_bins %}
+      <div class="grid-label">{{ y }}</div>
     {% endfor %}
 
-    <!-- Vote labels and tiles -->
-    {% for pair in grid_with_votes %}
-      {% set row = pair[0] %}
-      {% set vote_label = pair[1] %}
-      <div class="label">{{ vote_label }}</div>
-      {% for cell in row %}
-        <div class="tile" style="background-color: {{ cell.color }}; color: {{ cell.text_color }};">
-          <a href="/zoom?vmin={{ vote_edges[grid_size - cell.y - 1] }}&vmax={{ vote_edges[grid_size - cell.y] }}&ymin={{ year_edges[cell.x]|int }}&ymax={{ year_edges[cell.x + 1]|int }}">
-            {{ cell.count }}
-          </a>
+    {% for i in range(grid|length) %}
+      <div class="grid-label">{{ vote_bins[i] }}</div>
+      {% for j in range(grid[i]|length) %}
+        {% set count = grid[i][j] %}
+        {% set base = 255 - (count * 3 if count < 85 else 255) %}
+        {% set color = 'rgb(100, ' ~ (base) ~ ', ' ~ (base + 30 if base + 30 < 255 else 255) ~ ')' %}
+        <div class="tile" style="background-color: {{ color }};"
+             onclick="location.href='?v={{ vote_bins[i] }}&y={{ year_bins[j] }}'">
+          {{ count }}
         </div>
       {% endfor %}
     {% endfor %}
   </div>
-
-  {% if zoom %}
-    <a href="/" class="back-button">← Back to Full Grid</a>
-  {% endif %}
 </body>
 </html>

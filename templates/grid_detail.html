@@ -1,59 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Movies in Selected Tile</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      padding: 40px;
-      color: #333;
-    }
-
-    h2 {
-      font-size: 24px;
-      margin-bottom: 16px;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 10px;
-    }
-
-    li {
-      padding: 10px;
-      margin: 6px 0;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      font-size: 16px;
-    }
-
-    .back {
-      display: inline-block;
-      margin-top: 20px;
-      background: #333;
-      color: white;
-      padding: 8px 16px;
-      text-decoration: none;
-      border-radius: 6px;
-    }
-
-    .back:hover {
-      background-color: #000;
-    }
-  </style>
+    <title>Movie List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 2rem;
+            background: #fafafa;
+            color: #222;
+        }
+        h2 {
+            text-align: center;
+        }
+        .back {
+            display: block;
+            margin: 1rem auto 2rem;
+            text-align: center;
+            background: #0077cc;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            width: fit-content;
+            text-decoration: none;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: auto;
+        }
+        li {
+            background: #fff;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.05);
+        }
+    </style>
 </head>
 <body>
-  <h2>Movies with Votes {{ vmin }}–{{ vmax }} and Years {{ ymin }}–{{ ymax - 1 }}</h2>
-  <ul>
-    {% for _, movie in movies.iterrows() %}
-      <li><strong>{{ movie.title }}</strong> ({{ movie.year }}) — ⭐ {{ movie.vote_average }}</li>
-    {% endfor %}
-  </ul>
-
-  <a class="back" href="/">← Back to Main Grid</a>
+    <h2>Movies in Bin {{ vote_bin }} & {{ year_bin }}</h2>
+    <a href="javascript:history.back()" class="back">← Back</a>
+    <ul>
+        {% for movie in movies.itertuples() %}
+            <li><strong>{{ movie.title }}</strong> — {{ movie.vote_average }} ({{ movie.release_year }})</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
