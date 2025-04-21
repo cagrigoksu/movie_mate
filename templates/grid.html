@@ -9,15 +9,15 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 2rem;
-      background: #fdfdfd;
+      background: #f8f9fa;
       color: #222;
     }
-
+  
     h2 {
       text-align: center;
       margin-bottom: 2rem;
     }
-
+  
     .grid-wrapper {
       display: grid;
       grid-template-columns: auto repeat({{ year_bins|length }}, 1fr);
@@ -30,7 +30,7 @@
       border-radius: 8px;
       overflow: hidden;
     }
-
+  
     .grid-label {
       background: #fff;
       font-weight: 600;
@@ -41,8 +41,9 @@
       border-radius: 4px;
       font-size: 0.9rem;
       text-align: center;
+      color: #333;
     }
-
+  
     .tile {
       display: flex;
       align-items: center;
@@ -51,15 +52,17 @@
       border-radius: 4px;
       transition: all 0.2s ease;
       cursor: pointer;
-      color: #222;
+      color: #111;
       font-size: 0.9rem;
+      text-align: center;
     }
-
+  
     .tile:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 5px rgba(0,0,0,0.15);
+      transform: scale(1.05);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     }
   </style>
+  
 </head>
 <body>
   <h2>Movie Grid{% if vote_filter and year_filter %} (Zoom: {{ vote_filter }}, {{ year_filter }}){% endif %}</h2>
@@ -76,14 +79,16 @@
       <div class="grid-label">{{ vote_bins[i] }}</div>
       {% for j in range(grid[i]|length) %}
         {% set count = grid[i][j] %}
-        {% set base = 255 - (count * 3 if count < 85 else 255) %}
-        {% set color = 'rgb(100, ' ~ (base) ~ ', ' ~ (base + 30 if base + 30 < 255 else 255) ~ ')' %}
-        <div class="tile" style="background-color: {{ color }};"
-             onclick="location.href='?v={{ vote_bins[i] }}&y={{ year_bins[j] }}'">
+        {% set intensity = (count / 1000) if count < 1000 else 1.0 %}
+        {% set lightness = 90 - (intensity * 50) %}
+        {% set bg_color = 'hsl(180, 60%, ' ~ lightness ~ '%)' %}
+        <div class="tile" style="background-color: {{ bg_color }};"
+            onclick="location.href='?v={{ vote_bins[i] }}&y={{ year_bins[j] }}'">
           {{ count }}
         </div>
       {% endfor %}
     {% endfor %}
+
   </div>
 </body>
 </html>
