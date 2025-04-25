@@ -92,7 +92,6 @@
       const tiles = document.querySelectorAll('.tile');
       const rows = {};
 
-      // Group tiles by row index
       tiles.forEach(tile => {
         const row = tile.dataset.row;
         const value = parseInt(tile.dataset.value);
@@ -100,19 +99,11 @@
         rows[row].push({ element: tile, value });
       });
 
-      // Fixed hues for each row
-      const rowHues = {
-        0: 120, // green (9–10)
-        1: 30,  // orange (8–9)
-        2: 0,   // red (7–8)
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0,
-        7: 0,
-        8: 0,
-        9: 0    // 0–1 and below all red
-      };
+      const totalRows = Object.keys(rows).length;
+      const rowHues = {};
+      for (let i = 0; i < totalRows; i++) {
+        rowHues[i] = 120 - (i * (120 / (totalRows - 1)));
+      }
 
       Object.entries(rows).forEach(([rowIndex, rowTiles]) => {
         const values = rowTiles.map(t => t.value);
@@ -122,7 +113,7 @@
 
         rowTiles.forEach(({ element, value }) => {
           const factor = (max === min) ? 0.5 : (value - min) / (max - min);
-          const lightness = 35 + (factor * 35); // range: 35% to 70%
+          const lightness = 35 + (factor * 35);
           const color = `hsl(${hue}, 85%, ${lightness}%)`;
 
           element.style.borderColor = color;
