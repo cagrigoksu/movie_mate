@@ -1,51 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Movie List</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Movie List</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
+            margin: 0;
             padding: 2rem;
-            background: #fafafa;
-            color: #222;
+            background-color: #1e1e2f;
+            color: #fff;
         }
+
         h2 {
             text-align: center;
+            margin-bottom: 2rem;
+            color: #fff;
         }
+
         .back {
             display: block;
             margin: 1rem auto 2rem;
             text-align: center;
-            background: #0077cc;
+            background-color: #0077cc;
             color: #fff;
             padding: 0.5rem 1rem;
             border-radius: 6px;
             width: fit-content;
             text-decoration: none;
         }
-        ul {
-            list-style: none;
-            padding: 0;
-            max-width: 600px;
+
+        .movie-list-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            max-width: 90%;
             margin: auto;
+            background-color: #2c2c3c;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            padding: 15px;
         }
-        li {
-            background: #fff;
-            padding: 0.8rem;
+
+        .movie-card {
+            background-color: #333;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .movie-title {
+            font-size: 1.1rem;
+            font-weight: bold;
             margin-bottom: 0.5rem;
-            border-radius: 6px;
-            box-shadow: 0 0 4px rgba(0,0,0,0.05);
+        }
+
+        .movie-info {
+            font-size: 0.9rem;
+            color: #bbb;
+        }
+
+        .movie-rating {
+            background-color: #ff8c00;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            margin-top: 0.5rem;
         }
     </style>
 </head>
 <body>
     <h2>Movies in Bin {{ vote_bin }} & {{ year_bin }}</h2>
     <a href="javascript:history.back()" class="back">← Back</a>
-    <ul>
+    
+    <div class="movie-list-wrapper">
         {% for movie in movies.itertuples() %}
-            <li><strong>{{ movie.title }}</strong> — {{ movie.vote_average }} ({{ movie.release_year }})</li>
+            <div class="movie-card">
+                <div class="movie-title">{{ movie.title }}</div>
+                <div class="movie-info">Release Year: {{ movie.release_year }}</div>
+                <div class="movie-rating">{{ movie.vote_average }}</div>
+            </div>
         {% endfor %}
-    </ul>
+    </div>
 </body>
 </html>
