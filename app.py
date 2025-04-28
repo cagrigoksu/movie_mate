@@ -1,14 +1,33 @@
 from flask import Flask, render_template, request
 import pandas as pd
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import sqlite3
 
 app = Flask(__name__)
 
-df = pd.read_csv('mov.csv')  
-df['release_year'] = pd.to_datetime(df['release_date']).dt.year
+# Connect to the SQLite database
+def get_connection():
+    return sqlite3.connect('movies_final.db')  # replace with your SQLite DB filename
+
+# Load initial movie data
+def load_movies():
+    conn = get_connection()
+    query = '''
+        SELECT id, title, vote_average, release_date
+        FROM movies
+        WHERE release_date IS NOT NULL AND vote_average IS NOT NULL
+    '''
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+
+    df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
+    df['release_year'] = df['release_date'].dt.year
+    df = df.dropna(subset=['release_year'])  # Drop rows where release_year could not be parsed
+    df['release_year'] = df['release_year'].astype(int)
+
+    return df
+
+df = load_movies()
 
 def create_bins(sub_df):
     min_vote = sub_df['vote_average'].min()
@@ -38,7 +57,6 @@ def create_bins(sub_df):
     sub_df['year_bin'] = pd.cut(sub_df['release_year'], bins=year_bins, labels=year_labels, include_lowest=True, right=False)
 
     return sub_df, vote_labels[::-1], year_labels
-
 
 @app.route('/')
 @app.route('/grid')
