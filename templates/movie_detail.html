@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ movie.title }}</title>
+    <style>
+        body {
+            background-color: #1e1e2f;
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 2rem;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        img {
+            max-width: 300px;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .info {
+            max-width: 700px;
+            text-align: center;
+        }
+        .rating {
+            background-color: #ff8c00;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ movie.title }} ({{ movie.release_year }})</h1>
+
+        {% if movie.imdb_poster %}
+            <img src="{{ movie.imdb_poster }}" alt="Movie Poster">
+        {% elif movie.poster_path %}
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="Movie Poster">
+        {% endif %}
+
+        <div class="info">
+            <h3>Overview</h3>
+            <p>{{ movie.overview }}</p>
+
+            {% if movie.imdb_rating %}
+                <div class="rating">IMDb Rating: {{ movie.imdb_rating }}</div>
+            {% else %}
+                <div class="rating">IMDb Rating: Not Available</div>
+            {% endif %}
+        </div>
+
+        <br>
+        <a href="/grid" class="back" style="text-decoration: none; color: #00f;">← Back to Grid</a>
+    </div>
+</body>
+</html>

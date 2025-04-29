@@ -43,6 +43,11 @@
             padding: 15px;
         }
 
+        .movie-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
         .movie-card {
             background-color: #333;
             padding: 1rem;
@@ -76,6 +81,7 @@
             border-radius: 4px;
             padding: 0.2rem 0.5rem;
             margin-top: 0.5rem;
+            display: inline-block;
         }
     </style>
 </head>
@@ -85,11 +91,13 @@
     
     <div class="movie-list-wrapper">
         {% for movie in movies.itertuples() %}
-            <div class="movie-card">
-                <div class="movie-title">{{ movie.title }}</div>
-                <div class="movie-info">Release Year: {{ movie.release_year }}</div>
-                <div class="movie-rating">{{ movie.vote_average }}</div>
-            </div>
+            <a href="/movie/{{ movie.id }}" class="movie-link">
+                <div class="movie-card">
+                    <div class="movie-title">{{ movie.title }}</div>
+                    <div class="movie-info">Release Year: {{ movie.release_year }}</div>
+                    <div class="movie-rating">{{ movie.vote_average }}</div>
+                </div>
+            </a>
         {% endfor %}
     </div>
 </body>
